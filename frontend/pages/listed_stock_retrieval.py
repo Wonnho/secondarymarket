@@ -1,8 +1,10 @@
 import streamlit as st
-from header import render_header
 import sys
+from pathlib import Path
 
-sys.path.append('..')
+# Add parent directory to path for imports
+sys.path.append(str(Path(__file__).parent.parent))
+from components.header import render_header
 import FinanceDataReader as fdr
 import pandas as pd
 from datetime import datetime, timedelta

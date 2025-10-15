@@ -1,7 +1,7 @@
 import FinanceDataReader as fdr
 import streamlit as st
 
-from header import render_header  # ✅ 헤더 import
+from components.header import render_header  # ✅ 헤더 import
 
 # 페이지 설정
 st.set_page_config(page_title="주식 시장 현황", layout="wide")
