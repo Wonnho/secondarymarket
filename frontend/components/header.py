@@ -1,5 +1,11 @@
 # header.py
 import streamlit as st
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.append(str(Path(__file__).parent.parent))
+from utils.auth import is_logged_in, get_current_user, logout_user
 
 def render_header():
     """네비게이션 헤더를 렌더링하는 함수"""
@@ -107,5 +113,28 @@ def render_header():
         )
 
     with col4:
-        if st.button("로그인", key="login_btn", use_container_width=True, type="primary"):
-            st.switch_page("pages/login.py")  # ✅ 로그인 페이지로 이동
+        # 로그인 상태에 따라 다른 버튼 표시
+        if is_logged_in():
+            # 로그인된 경우: 사용자 정보와 로그아웃 버튼
+            user = get_current_user()
+            user_name = user['user_name'] if user else 'User'
+
+            # 사용자 메뉴
+            with st.popover(f"👤 {user_name}", use_container_width=True):
+                st.markdown(f"**{user_name}님**")
+                st.markdown(f"_{user['user_id']}_")
+                st.markdown("---")
+                if st.button("내 정보", key="profile", use_container_width=True):
+                    st.info("내 정보 페이지 (준비중)")
+                if st.button("설정", key="settings", use_container_width=True):
+                    st.info("설정 페이지 (준비중)")
+                st.markdown("---")
+                if st.button("로그아웃", key="logout_btn", use_container_width=True, type="secondary"):
+                    # 로그아웃 처리
+                    logout_user()
+                    st.success("로그아웃 되었습니다.")
+                    st.rerun()
+        else:
+            # 로그인되지 않은 경우: 로그인 버튼
+            if st.button("로그인", key="login_btn", use_container_width=True, type="primary"):
+                st.switch_page("pages/login.py")

@@ -6,6 +6,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 from components.header import render_header
+from utils.auth import register_user
 
 # 페이지 설정
 st.set_page_config(page_title="회원가입", layout="wide")
@@ -69,15 +70,19 @@ with col2:
             elif not agree:
                 st.error("이용약관에 동의해주세요.")
             else:
-                # 여기에 실제 회원가입 로직 추가
-                # 예: 데이터베이스에 사용자 정보 저장
-                
-                st.success("회원가입이 완료되었습니다!")
-                st.balloons()
-                
-                # ✅ 세션 상태 업데이트 후 페이지 리로드
-                st.session_state.signup_success = True
-                st.rerun()
+                # 백엔드 API를 통한 회원가입
+                success, error = register_user(user_id, password, email, name)
+
+                if success:
+                    st.success("회원가입이 완료되었습니다!")
+                    st.balloons()
+                    st.info("로그인 페이지로 이동합니다...")
+
+                    # ✅ 세션 상태 업데이트 후 페이지 리로드
+                    st.session_state.signup_success = True
+                    st.rerun()
+                else:
+                    st.error(error or "회원가입에 실패했습니다.")
     
     st.write("")
     st.write("")

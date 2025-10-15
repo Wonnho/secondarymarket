@@ -6,9 +6,17 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 from components.header import render_header
+from utils.auth import init_session_state, is_logged_in, login_user, authenticate_with_backend
 
 # 페이지 설정
 st.set_page_config(page_title="로그인", layout="wide")
+
+# 세션 상태 초기화
+init_session_state()
+
+# 이미 로그인된 경우 메인 페이지로 리다이렉트
+if is_logged_in():
+    st.switch_page("finance.py")
 
 # 헤더 렌더링
 render_header()
@@ -22,30 +30,43 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     st.write("")
     st.write("")
-    
+
     # 로그인 폼
     with st.form("login_form"):
         st.markdown("### 로그인 정보 입력")
-        
+
         # 아이디 입력
         user_id = st.text_input("아이디", placeholder="아이디를 입력하세요")
-        
+
         # 비밀번호 입력
         password = st.text_input("비밀번호", type="password", placeholder="비밀번호를 입력하세요")
-        
+
         st.write("")
-        
+
         # 로그인 버튼
         submit_button = st.form_submit_button("로그인", use_container_width=True, type="primary")
-        
+
         if submit_button:
             if user_id and password:
-                # 여기에 실제 로그인 로직 추가
-                # 예: 데이터베이스 확인, 세션 저장 등
-                st.success(f"환영합니다, {user_id}님!")
-                st.balloons()
-                # 로그인 성공 후 메인 페이지로 이동
-                # st.switch_page("finance.py")
+                # 백엔드 API를 통한 인증
+                success, user_data, error = authenticate_with_backend(user_id, password)
+
+                if success and user_data:
+                    # 로그인 성공
+                    login_user(
+                        user_id=user_data['user_id'],
+                        user_name=user_data['user_name'],
+                        access_token=user_data.get('access_token')
+                    )
+
+                    st.success(f"환영합니다, {user_data['user_name']}님!")
+                    st.balloons()
+
+                    # 로그인 성공 후 메인 페이지로 리다이렉트
+                    st.rerun()
+                else:
+                    # 로그인 실패
+                    st.error(error or "로그인에 실패했습니다.")
             else:
                 st.error("아이디와 비밀번호를 모두 입력해주세요.")
     
