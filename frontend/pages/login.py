@@ -1,6 +1,11 @@
 # pages/login.py
 import streamlit as st
-from header import render_header
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.append(str(Path(__file__).parent.parent))
+from components.header import render_header
 
 # 페이지 설정
 st.set_page_config(page_title="로그인", layout="wide")
