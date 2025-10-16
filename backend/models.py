@@ -1,29 +1,14 @@
 """
-User Model
-SQLAlchemy model for users table
+Database Models
+All SQLAlchemy ORM models in one file
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, CheckConstraint
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, CheckConstraint
 from sqlalchemy.sql import func
-from datetime import datetime
-from backend.core.database import Base
+from backend.database import Base
 
 
 class User(Base):
-    """
-    User model representing the users table in database
-
-    Attributes:
-        id: Primary key
-        user_id: Unique username/user ID
-        email: User's email address
-        name: User's full name
-        password_hash: Bcrypt hashed password
-        role: User role (user, admin, super_admin)
-        is_active: Account activation status
-        created_at: Account creation timestamp
-        updated_at: Last update timestamp
-        last_login: Last login timestamp
-    """
+    """User model for authentication and user management"""
 
     __tablename__ = "users"
 
@@ -38,24 +23,15 @@ class User(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     last_login = Column(DateTime, nullable=True)
 
-    # Constraints
     __table_args__ = (
-        CheckConstraint(
-            "role IN ('user', 'admin', 'super_admin')",
-            name='valid_role'
-        ),
+        CheckConstraint("role IN ('user', 'admin', 'super_admin')", name='valid_role'),
     )
 
     def __repr__(self):
         return f"<User(user_id='{self.user_id}', email='{self.email}', role='{self.role}')>"
 
     def to_dict(self):
-        """
-        Convert model to dictionary
-
-        Returns:
-            dict: User data as dictionary
-        """
+        """Convert to dictionary"""
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -68,20 +44,6 @@ class User(Base):
             'last_login': self.last_login.isoformat() if self.last_login else None
         }
 
-    def to_dict_public(self):
-        """
-        Convert model to dictionary (public info only, no sensitive data)
-
-        Returns:
-            dict: Public user data
-        """
-        return {
-            'user_id': self.user_id,
-            'name': self.name,
-            'role': self.role,
-            'is_active': self.is_active
-        }
-
     def is_admin_role(self) -> bool:
         """Check if user has admin privileges"""
         return self.role in ['admin', 'super_admin']
@@ -91,22 +53,42 @@ class User(Base):
         return self.role == 'super_admin'
 
     def can_manage_user(self, target_user_role: str) -> bool:
-        """
-        Check if this user can manage another user based on roles
-
-        Args:
-            target_user_role: Role of the target user
-
-        Returns:
-            bool: True if can manage, False otherwise
-        """
-        # Super admin can manage everyone
+        """Check if can manage another user based on roles"""
         if self.role == 'super_admin':
             return True
-
-        # Admin can manage regular users only
         if self.role == 'admin':
             return target_user_role == 'user'
-
-        # Regular users cannot manage anyone
         return False
+
+
+class AuditLog(Base):
+    """Audit log model for tracking admin actions"""
+
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    timestamp = Column(DateTime, default=func.now(), nullable=False, index=True)
+    admin_id = Column(String(100), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
+    admin_name = Column(String(100), nullable=False)
+    action = Column(String(50), nullable=False, index=True)
+    target = Column(String(100), index=True)
+    details = Column(Text)
+    ip_address = Column(String(50))
+    user_agent = Column(Text)
+
+    def __repr__(self):
+        return f"<AuditLog(id={self.id}, admin='{self.admin_id}', action='{self.action}')>"
+
+    def to_dict(self):
+        """Convert to dictionary"""
+        return {
+            'id': self.id,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+            'admin_id': self.admin_id,
+            'admin_name': self.admin_name,
+            'action': self.action,
+            'target': self.target,
+            'details': self.details,
+            'ip_address': self.ip_address,
+            'user_agent': self.user_agent
+        }

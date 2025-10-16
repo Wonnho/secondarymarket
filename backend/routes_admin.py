@@ -1,33 +1,30 @@
 """
-Admin Router
-API endpoints for administrative functions (user management, analytics, etc.)
+Admin Routes
+User management, analytics, and audit log endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 from typing import Optional
 from datetime import datetime
-from backend.core.database import get_db
-from backend.models.user import User
-from backend.models.audit_log import AuditLog
-from backend.schemas.user import (
+
+from backend.database import get_db
+from backend.models import User, AuditLog
+from backend.schemas import (
     UserResponse,
     UserListResponse,
     UserUpdate,
-    UserRole
-)
-from backend.schemas.audit_log import (
-    AuditLogCreate,
+    UserRole,
     AuditLogResponse,
     AuditLogListResponse
 )
-from backend.api.dependencies import (
+from backend.auth import (
     require_admin,
     require_super_admin,
     get_client_ip,
-    get_user_agent
+    get_user_agent,
+    get_password_hash
 )
-from backend.utils.auth import get_password_hash
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 

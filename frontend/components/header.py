@@ -94,16 +94,16 @@ def render_header():
         cols = st.columns(4)
         with cols[0]:
             if st.button("시장현황", key="market", use_container_width=True):
-                st.switch_page("finance.py")
+                st.switch_page("app.py")
         with cols[1]:
             if st.button("상장종목조회", key="stocks", use_container_width=True):
-                st.switch_page("pages/listed_stock_retrieval.py")
+                st.switch_page("pages/stocks.py")
         with cols[2]:
             if st.button("오늘의 공시", key="disclosure", use_container_width=True):
-                st.switch_page("pages/disclosure_today.py")
+                st.switch_page("pages/disclosure.py")
         with cols[3]:
             if st.button("오늘의 뉴스", key="news", use_container_width=True):
-                st.switch_page("pages/news_today.py")
+                st.switch_page("pages/news.py")
 
     with col3:
         lang = st.selectbox(

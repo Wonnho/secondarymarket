@@ -93,7 +93,7 @@ col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     if st.button("🏠 Finance Page", use_container_width=True):
-        st.switch_page("finance.py")
+        st.switch_page("app.py")
 
 with col2:
     if is_admin():

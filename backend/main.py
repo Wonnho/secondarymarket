@@ -7,11 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from contextlib import asynccontextmanager
 
-# Import routers
-from backend.api.routers import auth, admin
+# Import routes
+from backend import routes_auth, routes_admin
 
 # Import database utilities
-from backend.core.database import init_db, check_db_connection, close_db_connections, get_db_info
+from backend.database import init_db, check_db_connection, close_db_connections, get_db_info
 
 
 # Lifespan context manager for startup and shutdown events
@@ -73,9 +73,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router, prefix="/api")
-app.include_router(admin.router, prefix="/api")
+# Include routes
+app.include_router(routes_auth.router, prefix="/api")
+app.include_router(routes_admin.router, prefix="/api")
 
 
 @app.get("/")

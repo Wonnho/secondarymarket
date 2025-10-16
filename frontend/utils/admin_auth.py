@@ -65,7 +65,7 @@ def require_admin(redirect_to_home: bool = True) -> bool:
         st.error("⛔ 접근 거부: 관리자 권한이 필요합니다.")
         if redirect_to_home:
             st.info("메인 페이지로 이동합니다...")
-            st.switch_page("finance.py")
+            st.switch_page("app.py")
         return False
 
     return True
@@ -92,7 +92,7 @@ def require_super_admin(redirect_to_home: bool = True) -> bool:
         st.error("⛔ 접근 거부: 슈퍼 관리자 권한이 필요합니다.")
         if redirect_to_home:
             st.info("메인 페이지로 이동합니다...")
-            st.switch_page("finance.py")
+            st.switch_page("app.py")
         return False
 
     return True

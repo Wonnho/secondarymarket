@@ -16,7 +16,7 @@ init_session_state()
 
 # 이미 로그인된 경우 메인 페이지로 리다이렉트
 if is_logged_in():
-    st.switch_page("finance.py")
+    st.switch_page("app.py")
 
 # 헤더 렌더링
 render_header()
