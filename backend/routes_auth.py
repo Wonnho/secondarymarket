@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
-from backend.database import get_db
-from backend.models import User
-from backend.schemas import LoginRequest, LoginResponse, UserCreate, UserResponse
-from backend.auth import (
+from database import get_db
+from models import User
+from schemas import LoginRequest, LoginResponse, UserCreate, UserResponse
+from auth import (
     verify_password,
     get_password_hash,
     create_access_token,

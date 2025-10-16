@@ -8,9 +8,9 @@ from sqlalchemy import or_, func
 from typing import Optional
 from datetime import datetime
 
-from backend.database import get_db
-from backend.models import User, AuditLog
-from backend.schemas import (
+from database import get_db
+from models import User, AuditLog
+from schemas import (
     UserResponse,
     UserListResponse,
     UserUpdate,
@@ -18,7 +18,7 @@ from backend.schemas import (
     AuditLogResponse,
     AuditLogListResponse
 )
-from backend.auth import (
+from auth import (
     require_admin,
     require_super_admin,
     get_client_ip,

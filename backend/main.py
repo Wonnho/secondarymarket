@@ -8,10 +8,11 @@ import uvicorn
 from contextlib import asynccontextmanager
 
 # Import routes
-from backend import routes_auth, routes_admin
+import routes_auth
+import routes_admin
 
 # Import database utilities
-from backend.database import init_db, check_db_connection, close_db_connections, get_db_info
+from database import init_db, close_db_connections, get_db_info
 
 
 # Lifespan context manager for startup and shutdown events

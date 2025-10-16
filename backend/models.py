@@ -4,7 +4,7 @@ All SQLAlchemy ORM models in one file
 """
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, CheckConstraint
 from sqlalchemy.sql import func
-from backend.database import Base
+from database import Base
 
 
 class User(Base):

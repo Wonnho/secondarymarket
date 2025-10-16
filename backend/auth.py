@@ -11,8 +11,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 import os
 
-from backend.database import get_db
-from backend.models import User
+from database import get_db
+from models import User
 
 # ==================== Configuration ====================
 
