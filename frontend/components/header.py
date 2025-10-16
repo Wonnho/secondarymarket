@@ -6,6 +6,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 from utils.auth import is_logged_in, get_current_user, logout_user
+from utils.admin_auth import is_admin
 
 def render_header():
     """네비게이션 헤더를 렌더링하는 함수"""
@@ -123,6 +124,20 @@ def render_header():
             with st.popover(f"👤 {user_name}", use_container_width=True):
                 st.markdown(f"**{user_name}님**")
                 st.markdown(f"_{user['user_id']}_")
+
+                # Admin menu items
+                if is_admin():
+                    st.markdown("---")
+                    st.markdown("**🛡️ Admin**")
+                    if st.button("Admin Dashboard", key="admin_dashboard", use_container_width=True, type="primary"):
+                        st.switch_page("pages/admin/dashboard.py")
+                    if st.button("User Management", key="admin_users", use_container_width=True):
+                        st.switch_page("pages/admin/users.py")
+                    if st.button("Analytics", key="admin_analytics", use_container_width=True):
+                        st.switch_page("pages/admin/analytics.py")
+                    if st.button("🧪 Testing Setup", key="admin_test", use_container_width=True):
+                        st.switch_page("pages/admin_test_setup.py")
+
                 st.markdown("---")
                 if st.button("내 정보", key="profile", use_container_width=True):
                     st.info("내 정보 페이지 (준비중)")
