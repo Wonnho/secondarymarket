@@ -16,6 +16,8 @@ def init_session_state():
         st.session_state.user_name = None
     if 'access_token' not in st.session_state:
         st.session_state.access_token = None
+    if 'role' not in st.session_state:
+        st.session_state.role = 'user'
 
 
 def is_logged_in() -> bool:
@@ -42,7 +44,8 @@ def get_current_user() -> Optional[dict]:
     return {
         'user_id': st.session_state.user_id,
         'user_name': st.session_state.user_name,
-        'access_token': st.session_state.access_token
+        'access_token': st.session_state.access_token,
+        'role': st.session_state.get('role', 'user')
     }
 
 
@@ -67,6 +70,7 @@ def logout_user():
     st.session_state.user_id = None
     st.session_state.user_name = None
     st.session_state.access_token = None
+    st.session_state.role = 'user'
 
 
 def require_auth(redirect_to_login: bool = True):
