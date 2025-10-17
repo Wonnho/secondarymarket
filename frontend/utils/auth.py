@@ -4,10 +4,18 @@ Authentication Utility Module
 """
 import streamlit as st
 from typing import Optional, Tuple
+from utils.session_manager import (
+    save_session_to_cookie,
+    load_session_from_cookie,
+    clear_session,
+    check_and_enforce_timeout,
+    update_last_activity
+)
 
 
 def init_session_state():
-    """세션 상태 초기화"""
+    """세션 상태 초기화 및 복원"""
+    # 기본 세션 상태 초기화
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
     if 'user_id' not in st.session_state:
@@ -18,6 +26,14 @@ def init_session_state():
         st.session_state.access_token = None
     if 'role' not in st.session_state:
         st.session_state.role = 'user'
+
+    # 로그인되지 않은 경우, 저장된 세션 복원 시도
+    if not st.session_state.logged_in:
+        load_session_from_cookie()
+
+    # 로그인된 경우, 타임아웃 체크
+    if st.session_state.logged_in:
+        check_and_enforce_timeout()
 
 
 def is_logged_in() -> bool:
@@ -49,28 +65,23 @@ def get_current_user() -> Optional[dict]:
     }
 
 
-def login_user(user_id: str, user_name: str, access_token: Optional[str] = None):
+def login_user(user_id: str, user_name: str, access_token: Optional[str] = None, role: str = 'user'):
     """
-    사용자 로그인 처리
+    사용자 로그인 처리 및 세션 저장
 
     Args:
         user_id: 사용자 ID
         user_name: 사용자 이름
         access_token: JWT 액세스 토큰 (선택)
+        role: 사용자 역할 (default: 'user')
     """
-    st.session_state.logged_in = True
-    st.session_state.user_id = user_id
-    st.session_state.user_name = user_name
-    st.session_state.access_token = access_token
+    # Save to cookie and session state
+    save_session_to_cookie(user_id, user_name, access_token or 'dummy_token', role)
 
 
 def logout_user():
-    """사용자 로그아웃 처리"""
-    st.session_state.logged_in = False
-    st.session_state.user_id = None
-    st.session_state.user_name = None
-    st.session_state.access_token = None
-    st.session_state.role = 'user'
+    """사용자 로그아웃 처리 및 세션 클리어"""
+    clear_session()
 
 
 def require_auth(redirect_to_login: bool = True):
