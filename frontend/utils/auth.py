@@ -95,42 +95,27 @@ def authenticate_with_backend(user_id: str, password: str) -> Tuple[bool, Option
     Returns:
         Tuple[bool, Optional[dict], Optional[str]]:
             (인증 성공 여부, 사용자 정보, 에러 메시지)
-
-    TODO: 실제 백엔드 API와 연동 필요
     """
-    # 실제 구현 예시 (현재는 주석 처리)
-    # try:
-    #     import requests
-    #     response = requests.post(
-    #         "http://backend:8000/api/auth/login",
-    #         json={"user_id": user_id, "password": password},
-    #         timeout=5
-    #     )
-    #
-    #     if response.status_code == 200:
-    #         data = response.json()
-    #         return True, {
-    #             'user_id': data['user_id'],
-    #             'user_name': data['name'],
-    #             'role': data.get('role', 'user'),
-    #             'access_token': data['access_token']
-    #         }, None
-    #     else:
-    #         return False, None, "아이디 또는 비밀번호가 올바르지 않습니다."
-    # except Exception as e:
-    #     return False, None, f"서버 연결 오류: {str(e)}"
+    try:
+        import requests
+        response = requests.post(
+            "http://backend:8000/api/auth/login",
+            json={"user_id": user_id, "password": password},
+            timeout=5
+        )
 
-    # 임시 인증 로직 (모든 입력 허용)
-    # 실제 운영 환경에서는 반드시 위의 백엔드 API 연동 코드로 교체해야 함
-    if user_id and password:
-        return True, {
-            'user_id': user_id,
-            'user_name': user_id,  # 실제로는 DB에서 이름 가져오기
-            'role': 'user',  # 실제로는 DB에서 역할 가져오기
-            'access_token': 'dummy_token'  # 실제로는 JWT 토큰
-        }, None
-    else:
-        return False, None, "아이디와 비밀번호를 입력해주세요."
+        if response.status_code == 200:
+            data = response.json()
+            return True, {
+                'user_id': data['user_id'],
+                'user_name': data['name'],
+                'role': data.get('role', 'user'),
+                'access_token': data['access_token']
+            }, None
+        else:
+            return False, None, "아이디 또는 비밀번호가 올바르지 않습니다."
+    except Exception as e:
+        return False, None, f"서버 연결 오류: {str(e)}"
 
 
 def register_user(user_id: str, password: str, email: str, name: str) -> Tuple[bool, Optional[str]]:
@@ -145,37 +130,27 @@ def register_user(user_id: str, password: str, email: str, name: str) -> Tuple[b
 
     Returns:
         Tuple[bool, Optional[str]]: (등록 성공 여부, 에러 메시지)
-
-    TODO: 실제 백엔드 API와 연동 필요
     """
-    # 실제 구현 예시 (현재는 주석 처리)
-    # try:
-    #     import requests
-    #     response = requests.post(
-    #         "http://backend:8000/api/auth/signup",
-    #         json={
-    #             "user_id": user_id,
-    #             "password": password,
-    #             "email": email,
-    #             "name": name
-    #         },
-    #         timeout=5
-    #     )
-    #
-    #     if response.status_code == 201:
-    #         return True, None
-    #     else:
-    #         data = response.json()
-    #         return False, data.get('detail', '회원가입에 실패했습니다.')
-    # except Exception as e:
-    #     return False, f"서버 연결 오류: {str(e)}"
+    try:
+        import requests
+        response = requests.post(
+            "http://backend:8000/api/auth/signup",
+            json={
+                "user_id": user_id,
+                "password": password,
+                "email": email,
+                "name": name
+            },
+            timeout=5
+        )
 
-    # 임시 등록 로직 (항상 성공)
-    # 실제 운영 환경에서는 반드시 위의 백엔드 API 연동 코드로 교체해야 함
-    if user_id and password and email and name:
-        return True, None
-    else:
-        return False, "모든 필드를 입력해주세요."
+        if response.status_code == 201:
+            return True, None
+        else:
+            data = response.json()
+            return False, data.get('detail', '회원가입에 실패했습니다.')
+    except Exception as e:
+        return False, f"서버 연결 오류: {str(e)}"
 
 
 def get_auth_header() -> dict:
