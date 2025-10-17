@@ -2,14 +2,22 @@ import FinanceDataReader as fdr
 import streamlit as st
 from datetime import datetime, time, timedelta
 import pandas as pd
+import sys
+from pathlib import Path
 
-from components.header import render_header  # ✅ 헤더 import
+# Add parent directory to path for imports
+sys.path.append(str(Path(__file__).parent))
+from components.header import render_header
+from utils.auth import init_session_state
 
 # 페이지 설정
 st.set_page_config(page_title="주식 시장 현황", layout="wide")
 
+# 세션 상태 초기화 (로그인 상태 유지를 위해 필수!)
+init_session_state()
+
 # 헤더 렌더링
-render_header()  # ✅ 헤더 함수 호출
+render_header()
 
 # 제목 중앙 정렬
 st.markdown("<h1 style='text-align: center;'>📈 한국 주식 시장</h1>", unsafe_allow_html=True)
@@ -17,6 +25,27 @@ st.markdown("<h1 style='text-align: center;'>📈 한국 주식 시장</h1>", un
 # 간격 추가
 st.write("")
 st.write("")
+
+
+# 색상 변경 함수 (상승=빨강, 하락=파랑)
+def color_change(val):
+    """
+    등락률에 따라 색상 적용
+
+    Args:
+        val: 등락률 값
+
+    Returns:
+        str: CSS 색상 스타일
+    """
+    if pd.isna(val):
+        return 'color: black'
+    if val > 0:
+        return 'color: red; font-weight: bold'
+    elif val < 0:
+        return 'color: blue; font-weight: bold'
+    else:
+        return 'color: black'
 
 
 @st.cache_data(ttl=300)  # 5분 캐시
@@ -197,8 +226,17 @@ if not df_krx.empty:
     else:
         df_kospi = df_kospi_filtered.sort_values('Marcap', ascending=True).head(20)
 
+    # 데이터프레임 준비 및 컬럼명 변경
     df_kospi_display = df_kospi[columns_to_show].rename(columns=columns_mapping)
-    st.dataframe(df_kospi_display, height=400, width=780, hide_index=True)
+
+    # 스타일 적용: 등락률 컬럼에 색상 적용
+    styled_kospi = df_kospi_display.style.applymap(
+        color_change,
+        subset=['등락률(%)']
+    )
+
+    # 스타일 적용된 데이터프레임 표시
+    st.dataframe(styled_kospi, height=400, use_container_width=True, hide_index=True)
 else:
     st.warning("KOSPI 데이터를 불러올 수 없습니다.")
 
@@ -225,8 +263,17 @@ if not df_krx.empty:
     else:
         df_kosdaq = df_kosdaq_filtered.sort_values('Marcap', ascending=True).head(20)
 
+    # 데이터프레임 준비 및 컬럼명 변경
     df_kosdaq_display = df_kosdaq[columns_to_show].rename(columns=columns_mapping)
-    st.dataframe(df_kosdaq_display, height=400, width=780, hide_index=True)
+
+    # 스타일 적용: 등락률 컬럼에 색상 적용
+    styled_kosdaq = df_kosdaq_display.style.applymap(
+        color_change,
+        subset=['등락률(%)']
+    )
+
+    # 스타일 적용된 데이터프레임 표시
+    st.dataframe(styled_kosdaq, height=400, use_container_width=True, hide_index=True)
 else:
     st.warning("KOSDAQ 데이터를 불러올 수 없습니다.")
 
