@@ -5,6 +5,7 @@ Admin Authentication Utilities
 import streamlit as st
 from typing import List, Dict
 from .auth import is_logged_in, get_current_user
+from . import session_manager
 
 
 def is_admin() -> bool:
@@ -215,7 +216,4 @@ def set_user_role_for_testing(role: str):
 
     주의: 개발/테스트 환경에서만 사용! 프로덕션에서는 제거 필요
     """
-    if 'user_id' in st.session_state:
-        st.session_state.role = role
-        # 임시로 get_current_user가 반환하는 정보 업데이트
-        st.warning(f"⚠️ 테스트 모드: 사용자 역할이 '{role}'로 설정되었습니다")
+    session_manager.set_user_role(role)

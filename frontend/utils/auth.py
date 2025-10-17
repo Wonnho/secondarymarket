@@ -4,36 +4,19 @@ Authentication Utility Module
 """
 import streamlit as st
 from typing import Optional, Tuple
-from utils.session_manager import (
-    save_session_to_cookie,
-    load_session_from_cookie,
-    clear_session,
-    check_and_enforce_timeout,
-    update_last_activity
-)
+from utils import session_manager
 
 
 def init_session_state():
-    """세션 상태 초기화 및 복원"""
-    # 기본 세션 상태 초기화
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-    if 'user_id' not in st.session_state:
-        st.session_state.user_id = None
-    if 'user_name' not in st.session_state:
-        st.session_state.user_name = None
-    if 'access_token' not in st.session_state:
-        st.session_state.access_token = None
-    if 'role' not in st.session_state:
-        st.session_state.role = 'user'
+    """세션 상태 초기화 및 타임아웃 체크"""
+    # Initialize all session state variables
+    session_manager.init_session_state()
 
-    # 로그인되지 않은 경우, 저장된 세션 복원 시도
-    if not st.session_state.logged_in:
-        load_session_from_cookie()
-
-    # 로그인된 경우, 타임아웃 체크
-    if st.session_state.logged_in:
-        check_and_enforce_timeout()
+    # Check for timeout if logged in
+    if session_manager.is_logged_in():
+        if not session_manager.check_session_timeout():
+            st.warning("⏰ 1시간 동안 활동이 없어 자동으로 로그아웃되었습니다.")
+            st.info("다시 로그인해주세요.")
 
 
 def is_logged_in() -> bool:
@@ -43,8 +26,7 @@ def is_logged_in() -> bool:
     Returns:
         bool: 로그인 여부
     """
-    init_session_state()
-    return st.session_state.logged_in
+    return session_manager.is_logged_in()
 
 
 def get_current_user() -> Optional[dict]:
@@ -54,15 +36,7 @@ def get_current_user() -> Optional[dict]:
     Returns:
         Optional[dict]: 사용자 정보 딕셔너리 또는 None
     """
-    if not is_logged_in():
-        return None
-
-    return {
-        'user_id': st.session_state.user_id,
-        'user_name': st.session_state.user_name,
-        'access_token': st.session_state.access_token,
-        'role': st.session_state.get('role', 'user')
-    }
+    return session_manager.get_current_user()
 
 
 def login_user(user_id: str, user_name: str, access_token: Optional[str] = None, role: str = 'user'):
@@ -75,13 +49,17 @@ def login_user(user_id: str, user_name: str, access_token: Optional[str] = None,
         access_token: JWT 액세스 토큰 (선택)
         role: 사용자 역할 (default: 'user')
     """
-    # Save to cookie and session state
-    save_session_to_cookie(user_id, user_name, access_token or 'dummy_token', role)
+    session_manager.save_session(
+        user_id=user_id,
+        user_name=user_name,
+        access_token=access_token or 'dummy_token',
+        role=role
+    )
 
 
 def logout_user():
     """사용자 로그아웃 처리 및 세션 클리어"""
-    clear_session()
+    session_manager.clear_session()
 
 
 def require_auth(redirect_to_login: bool = True):
@@ -134,6 +112,7 @@ def authenticate_with_backend(user_id: str, password: str) -> Tuple[bool, Option
     #         return True, {
     #             'user_id': data['user_id'],
     #             'user_name': data['name'],
+    #             'role': data.get('role', 'user'),
     #             'access_token': data['access_token']
     #         }, None
     #     else:
@@ -147,6 +126,7 @@ def authenticate_with_backend(user_id: str, password: str) -> Tuple[bool, Option
         return True, {
             'user_id': user_id,
             'user_name': user_id,  # 실제로는 DB에서 이름 가져오기
+            'role': 'user',  # 실제로는 DB에서 역할 가져오기
             'access_token': 'dummy_token'  # 실제로는 JWT 토큰
         }, None
     else:
@@ -205,9 +185,20 @@ def get_auth_header() -> dict:
     Returns:
         dict: Authorization 헤더
     """
-    if not is_logged_in() or not st.session_state.access_token:
+    user = get_current_user()
+    if not user or not user.get('access_token'):
         return {}
 
     return {
-        'Authorization': f'Bearer {st.session_state.access_token}'
+        'Authorization': f'Bearer {user["access_token"]}'
     }
+
+
+def get_session_info() -> dict:
+    """
+    현재 세션 정보 조회
+
+    Returns:
+        dict: 세션 정보 (로그인 시간, 활동 시간 등)
+    """
+    return session_manager.get_session_info()

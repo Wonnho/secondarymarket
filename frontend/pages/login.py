@@ -56,7 +56,8 @@ with col2:
                     login_user(
                         user_id=user_data['user_id'],
                         user_name=user_data['user_name'],
-                        access_token=user_data.get('access_token')
+                        access_token=user_data.get('access_token'),
+                        role=user_data.get('role', 'user')
                     )
 
                     st.success(f"환영합니다, {user_data['user_name']}님!")
