@@ -13,6 +13,7 @@ import os
 
 from database import get_db
 from models import User
+import session_manager
 
 # ==================== Configuration ====================
 
@@ -69,16 +70,31 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
-    """Get current authenticated user from JWT token"""
+    """
+    Get current authenticated user from JWT token with Redis session validation
+
+    This validates:
+    1. JWT token signature and expiration
+    2. Redis session existence
+    3. User exists in database
+    4. User is active
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    token = credentials.credentials
-    payload = decode_access_token(token)
+    session_expired_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Session expired, please login again",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
+    token = credentials.credentials
+
+    # Step 1: Validate JWT token
+    payload = decode_access_token(token)
     if payload is None:
         raise credentials_exception
 
@@ -86,12 +102,20 @@ def get_current_user(
     if user_id is None:
         raise credentials_exception
 
-    user = db.query(User).filter(User.user_id == user_id).first()
+    # Step 2: Validate Redis session
+    session_data = session_manager.get_session(token)
+    if session_data is None:
+        raise session_expired_exception
 
+    # Step 3: Query user from database
+    user = db.query(User).filter(User.user_id == user_id).first()
     if user is None:
         raise credentials_exception
 
+    # Step 4: Check if user is active
     if not user.is_active:
+        # Delete session for inactive user
+        session_manager.delete_session(token)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive"

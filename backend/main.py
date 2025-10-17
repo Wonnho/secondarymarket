@@ -10,9 +10,11 @@ from contextlib import asynccontextmanager
 # Import routes
 import routes_auth
 import routes_admin
+import routes_session
 
 # Import database utilities
 from database import init_db, close_db_connections, get_db_info
+from redis_client import check_redis_connection, get_redis_info
 
 
 # Lifespan context manager for startup and shutdown events
@@ -44,6 +46,13 @@ async def lifespan(app: FastAPI):
         print(f"✅ Database connected: {db_info['host']}:{db_info['port']}/{db_info['database']}")
     else:
         print(f"⚠️  Database connection failed")
+
+    # Check Redis connection
+    if check_redis_connection():
+        redis_info = get_redis_info()
+        print(f"✅ Redis connected: {redis_info.get('version')}")
+    else:
+        print(f"⚠️  Redis connection failed")
 
     yield
 
@@ -77,6 +86,7 @@ app.add_middleware(
 # Include routes
 app.include_router(routes_auth.router, prefix="/api")
 app.include_router(routes_admin.router, prefix="/api")
+app.include_router(routes_session.router, prefix="/api")
 
 
 @app.get("/")
@@ -99,9 +109,10 @@ def read_root():
 def health_check():
     """상세 헬스 체크"""
     db_info = get_db_info()
+    redis_info = get_redis_info()
 
     return {
-        "status": "healthy" if db_info['connected'] else "degraded",
+        "status": "healthy" if (db_info['connected'] and redis_info['connected']) else "degraded",
         "api": "running",
         "database": {
             "connected": db_info['connected'],
@@ -109,7 +120,12 @@ def health_check():
             "port": db_info.get('port'),
             "database": db_info.get('database')
         },
-        "redis": "pending"  # TODO: Add Redis health check
+        "redis": {
+            "connected": redis_info.get('connected'),
+            "version": redis_info.get('version'),
+            "used_memory": redis_info.get('used_memory'),
+            "connected_clients": redis_info.get('connected_clients')
+        }
     }
 
 

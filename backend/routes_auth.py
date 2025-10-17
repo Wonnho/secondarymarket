@@ -1,10 +1,11 @@
 """
 Authentication Routes
-Login, register, logout endpoints
+Login, register, logout endpoints with Redis session management
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from typing import Optional
 
 from database import get_db
 from models import User
@@ -16,6 +17,7 @@ from auth import (
     get_current_user,
     get_client_ip
 )
+import session_manager
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -57,6 +59,21 @@ def login(
         data={"sub": user.user_id, "role": user.role},
         expires_delta=timedelta(minutes=60)
     )
+
+    # Create Redis session
+    session_created = session_manager.create_session(
+        token=access_token,
+        user_data={
+            "user_id": user.user_id,
+            "user_name": user.name,
+            "email": user.email,
+            "role": user.role,
+            "ip_address": ip_address
+        }
+    )
+
+    if not session_created:
+        print(f"⚠️  Warning: Failed to create Redis session for user {user.user_id}")
 
     return LoginResponse(
         user_id=user.user_id,
@@ -110,6 +127,23 @@ def get_me(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/logout")
-def logout():
-    """Logout (client-side token removal)"""
-    return {"message": "Successfully logged out"}
+def logout(authorization: Optional[str] = Header(None)):
+    """
+    Logout - removes session from Redis
+
+    Args:
+        authorization: Bearer token from Authorization header
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return {"message": "No active session to logout"}
+
+    # Extract token from "Bearer <token>"
+    token = authorization.replace("Bearer ", "")
+
+    # Delete Redis session
+    session_deleted = session_manager.delete_session(token)
+
+    if session_deleted:
+        return {"message": "Successfully logged out"}
+    else:
+        return {"message": "Session already expired or not found"}
