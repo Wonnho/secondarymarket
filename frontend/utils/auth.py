@@ -134,12 +134,13 @@ def register_user(user_id: str, password: str, email: str, name: str) -> Tuple[b
     try:
         import requests
         response = requests.post(
-            "http://backend:8000/api/auth/signup",
+            "http://backend:8000/api/auth/register",
             json={
                 "user_id": user_id,
                 "password": password,
                 "email": email,
-                "name": name
+                "name": name,
+                "role": "user"  # Default role for new registrations
             },
             timeout=5
         )
