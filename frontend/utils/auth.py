@@ -108,7 +108,7 @@ def authenticate_with_backend(user_id: str, password: str) -> Tuple[bool, Option
             data = response.json()
             return True, {
                 'user_id': data['user_id'],
-                'user_name': data['name'],
+                'user_name': data['user_name'],
                 'role': data.get('role', 'user'),
                 'access_token': data['access_token']
             }, None
